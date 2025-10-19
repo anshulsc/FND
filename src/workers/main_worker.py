@@ -17,17 +17,33 @@ from src.modules.pdf_generator import create_report_pdf
 from src.logger_config import worker_logger
 
 def find_query_files(query_id: str):
-    """Finds the image and caption file for a given query_id."""
+    """
+    Finds the image and caption file for a given query_id.
+    This version is more robust and checks for any common image extension.
+    """
     query_path = QUERIES_DIR / query_id
     if not query_path.is_dir():
         raise FileNotFoundError(f"Query directory not found: {query_path}")
-    
+
+    # --- ROBUST FILE SEARCH ---
+    # Search for any file with a common image extension.
+    image_extensions = ['.jpg', '.jpeg', '.png', '.webp', '.gif', '.bmp']
+    img_file = None
+    for ext in image_extensions:
+        # Use glob to find a list of matching files
+        found_files = list(query_path.glob(f"*{ext}"))
+        if found_files:
+            img_file = found_files[0] # Take the first one found
+            break # Stop searching once an image is found
+
+    if img_file is None:
+        raise FileNotFoundError(f"No valid image file (.jpg, .png, etc.) found in '{query_path}'")
+
+    # Search for the caption file
     try:
-        img_file = next(query_path.glob('*.[jp][pn]g')) # jpg, jpeg, png
+        cap_file = next(query_path.glob('*.txt'))
     except StopIteration:
-        img_file = next(query_path.glob('*.webp')) # Add other types if needed
-    
-    cap_file = next(query_path.glob('*.txt'))
+        raise FileNotFoundError(f"No caption file (.txt) found in '{query_path}'")
     
     return img_file, cap_file
 
@@ -37,6 +53,10 @@ def process_job(job_path):
     """
     query_id = job_path.stem
     worker_logger.info(f"\n--- [WORKER] Processing job for query: {query_id} ---")
+    
+     # --- FIX: Initialize current_stage at the beginning of the try block ---
+    current_stage = "initialization" 
+
 
     try:
         # STAGE 1: Evidence Extraction (REAL IMPLEMENTATION)

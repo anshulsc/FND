@@ -231,7 +231,7 @@ def delete_query_permanently(query_id: str):
     """Permanently deletes a query's files from trash and its record from the database."""
     api_logger.warning(f"Received request to PERMANENTLY DELETE query '{query_id}'.")
 
-    # Define paths in trash
+
     trash_processed_path = TRASH_DIR / "processed" / query_id
     trash_results_path = TRASH_DIR / "results" / query_id
     
@@ -248,6 +248,61 @@ def delete_query_permanently(query_id: str):
     except Exception as e:
         api_logger.error(f"Failed to permanently delete '{query_id}': {e}")
         raise HTTPException(status_code=500, detail=f"Failed to permanently delete: {e}")
+    
+from src.modules.online_evidence_extractor import run_extraction_and_indexing_pipeline
+
+@app.post("/extract_evidence", summary="Run the online evidence extraction and indexing agent")
+async def extract_evidence_online(caption: str = Form(...)):
+
+    api_logger.info("Received request for online evidence extraction and indexing.") 
+    extraction_result = run_extraction_and_indexing_pipeline(caption)
+    return JSONResponse(content=extraction_result)
+
+
+
+@app.post("/investigate_and_analyze", summary="A full pipeline to extract evidence and queue for analysis")
+async def investigate_and_analyze(caption: str = Form(...), image: UploadFile = File(...)):
+
+    api_logger.info("Received request for full 'Investigate & Analyze' pipeline.")
+    
+    try:
+        extraction_result = run_extraction_and_indexing_pipeline(caption)
+        new_evidence_count = extraction_result.get("new_evidence_count", 0)
+        api_logger.info(f"Evidence extraction found {new_evidence_count} new items.")
+    except Exception as e:
+        api_logger.error(f"Online evidence extraction failed: {e}")
+        raise HTTPException(status_code=500, detail=f"Evidence extraction failed: {e}")
+
+    try:
+        query_id = f"query_{uuid.uuid4().hex[:8]}"
+        query_dir = QUERIES_DIR / query_id
+        query_dir.mkdir()
+
+        image_ext = Path(image.filename).suffix if Path(image.filename).suffix else ".jpg"
+        image_path = query_dir / f"query_img{image_ext}"
+        
+        # We need to reset the file pointer before reading it again
+        image.file.seek(0)
+        with open(image_path, "wb") as buffer:
+            shutil.copyfileobj(image.file, buffer)
+
+        # Save the caption
+        caption_path = query_dir / "query_cap.txt"
+        caption_path.write_text(caption.strip(), encoding='utf-8')
+        
+        api_logger.info(f"Successfully saved new query with ID '{query_id}' for the watcher to process.")
+    except Exception as e:
+        api_logger.error(f"Failed to save the original query files: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to save original query: {e}")
+
+    # --- Step 3: Return a consolidated result to the frontend ---
+    final_response = {
+        "message": f"Successfully found {new_evidence_count} new evidence items. The original query has been submitted for full analysis.",
+        "new_query_id": query_id,
+        "extraction_details": extraction_result
+    }
+    
+    return JSONResponse(content=final_response)
 
 if __name__ == "__main__":
     import uvicorn

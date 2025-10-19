@@ -7,8 +7,6 @@ from PIL import Image
 from fpdf import FPDF, XPos, YPos
 from markdown2 import Markdown
 from datetime import datetime
-
-
 from src.config import BASE_DIR, PROCESSED_DIR, RESULTS_DIR
 
 
