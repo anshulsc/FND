@@ -114,8 +114,8 @@ else:
                 with col3:
                     st.markdown("**Verdict**")
                     if status == 'completed':
-                        if verdict == "True": st.success(f"{verdict_icon[verdict]} {verdict}", icon=verdict_icon[verdict])
-                        elif verdict == "Fake": st.error(f"{verdict_icon[verdict]} {verdict}", icon=verdict_icon[verdict])
+                        if verdict == "True": st.success(f" {verdict}", icon=verdict_icon[verdict])
+                        elif verdict == "Fake": st.error(f" {verdict}", icon=verdict_icon[verdict])
                         else: st.warning(f"{verdict_icon.get(verdict, '❓')} {verdict}", icon=verdict_icon.get(verdict, '❓'))
                     else: st.caption("Processing...")
                     if status == 'failed':
@@ -129,14 +129,14 @@ else:
                     b_col1, b_col2, b_col3, b_col4 = st.columns([1, 1, 1, 1])
 
                     with b_col1:
-                        if st.button("📄", key=f"details_{query_id}", help="View analysis details page"):
+                        if st.button("👁️", key=f"details_{query_id}", help="View analysis details page"):
                             st.session_state.selected_query_id = query_id
                             st.switch_page("pages/2_Query_Details.py")
                     
                     with b_col2:
                         # For the PDF, st.link_button is the best choice. We'll style it to look similar.
                         if status == 'completed' and q.get("result_pdf_path"):
-                            st.link_button("📜", f"{API_URL}/results/{query_id}", help="Open final PDF report")
+                            st.link_button("📤", f"{API_URL}/results/{query_id}", help="Open final PDF report")
 
                     with b_col3:
                         if st.button("🔄", key=f"rerun_{query_id}", help="Rerun analysis for this query"):
