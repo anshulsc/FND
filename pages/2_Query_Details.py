@@ -6,7 +6,7 @@ import re
 from pathlib import Path
 from src.config import PROCESSED_DIR # Import for finding local files
 
-API_URL = "http://127.0.0.1:8000"
+API_URL = "https://maida-prayerless-brambly.ngrok-free.dev"
 
 # --- Page Configuration ---
 st.set_page_config(page_title="Query Details", layout="wide")

@@ -3,7 +3,7 @@ import streamlit as st
 import requests
 import io
 
-API_URL = "http://127.0.0.1:8000"
+API_URL = "https://maida-prayerless-brambly.ngrok-free.dev"
 
 st.set_page_config(page_title="Add New Query", page_icon="➕", layout="wide")
 st.title("➕ Add a New Query for Analysis")

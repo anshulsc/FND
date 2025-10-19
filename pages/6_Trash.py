@@ -3,7 +3,7 @@ import streamlit as st
 import requests
 import pandas as pd
 
-API_URL = "http://127.0.0.1:8000"
+API_URL = "https://maida-prayerless-brambly.ngrok-free.dev"
 
 st.set_page_config(page_title="Trash", page_icon="🗑️", layout="wide")
 st.title("🗑️ Trashed Queries")
